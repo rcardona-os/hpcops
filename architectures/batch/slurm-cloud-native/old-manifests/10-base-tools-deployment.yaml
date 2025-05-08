@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: base-tools-headless
+  labels:
+    app: base-tools
+spec:
+  clusterIP: None  # Headless service
+  selector:
+    app: base-tools
+  ports:
+    - port: 22 
+      name: slurm
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: base-tools
+  labels:
+    app: base-tools
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: base-tools
+  template:
+    metadata:
+      labels:
+        app: base-tools
+    spec:
+      serviceAccountName: slurm-sa
+      containers:
+        - name: base-tools-process
+          image: quay.io/rcardona/base-tools:latest
+          ports:
+            - containerPort: 22
+              name: ssh
+          securityContext:
+            privileged: true
+            runAsUser: 0
+            allowPrivilegeEscalation: true

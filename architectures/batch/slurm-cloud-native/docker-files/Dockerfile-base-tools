@@ -1,0 +1,20 @@
+# Use the official RHEL 9 base image
+FROM registry.access.redhat.com/ubi9/ubi:latest
+
+# Switch to root user for installation
+USER root
+
+# Install necessary packages
+RUN dnf install -y vim wget openssh-clients openssh-server bind-utils && \
+    ssh-keygen -A && \
+    mkdir -p /var/run/sshd && \
+    echo 'root:password' | chpasswd
+
+RUN sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config \
+    && sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+
+EXPOSE 22
+
+# Set the entrypoint
+CMD ["/usr/sbin/sshd", "-D"]

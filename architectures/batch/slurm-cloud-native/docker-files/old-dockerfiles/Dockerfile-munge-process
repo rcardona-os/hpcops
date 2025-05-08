@@ -1,0 +1,24 @@
+# Use the official RHEL 9 base image
+FROM registry.access.redhat.com/ubi9/ubi:latest
+
+# Switch to root user for installation
+USER root
+
+# Create the munge user and group
+RUN groupadd -g 1001 munge && \
+    useradd -m -u 1001 -g munge -d /var/lib/munge -s /sbin/nologin -c "MUNGE Uid 'N' Gid Emporium" munge
+
+# Install necessary packages
+RUN dnf install -y munge munge-libs munge-devel procps --enablerepo=codeready-builder-for-rhel-9-$(arch)-rpms && \
+    mkdir -p /run/munge /var/lib/munge /var/log/munge && \
+    chown -R 1001:1001 /run/munge /var/lib/munge /var/log/munge && \
+    chmod 0755 /run/munge && chmod 700 /var/lib/munge && chmod 755 /var/log/munge && \
+    dnf clean all
+
+COPY munge.key /tmp/munge.key
+
+# Switch to munge user
+USER 1001
+
+# Start munged as the munge user
+CMD ["/bin/bash", "-c", "cp /tmp/munge.key /etc/munge/munge.key && chmod 0400 /etc/munge/munge.key && chown 1001:1001 /etc/munge/munge.key && /usr/sbin/munged --foreground"]

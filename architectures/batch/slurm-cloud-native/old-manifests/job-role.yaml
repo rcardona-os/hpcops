@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: scc-assignment-job
+spec:
+  template:
+    spec:
+      serviceAccountName: admin-sa  # This service account must have admin privileges
+      containers:
+        - name: scc-assignment
+          image: quay.io/openshift/origin-cli:latest  # Image with `oc` command
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              oc adm policy add-scc-to-user custom-scc-munge -z munge-sa -n $(oc project -q)
+      restartPolicy: Never
+  backoffLimit: 1

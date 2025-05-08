@@ -1,0 +1,29 @@
+# Use the official RHEL 9 base image
+FROM registry.access.redhat.com/ubi9/ubi:latest
+
+# Switch to root user for installation
+USER root
+
+# Create the munge user and group
+RUN groupadd -g 1001 munge && \
+    useradd -m -u 1001 -g munge -d /var/lib/munge -s /sbin/nologin -c "MUNGE Uid 'N' Gid Emporium" munge
+
+# Create the munge and slurm users and groups
+RUN groupadd -g 1002 slurm && \
+    useradd -m -u 1002 -g slurm -d /var/lib/slurm -s /sbin/nologin -c "SLURM workload manager" slurm
+
+# Install necessary packages for slurm
+RUN dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+
+RUN dnf -y install slurm slurm-slurmctld slurm-slurmdbd procps socat && \
+    touch /var/log/slurm/slurmdbd.conf && \
+    chown slurm:slurm /var/log/slurm/slurmdbd.conf && \
+    chown slurm /etc/slurm/slurmdbd.conf && \
+    dnf clean all
+
+RUN mkdir -p /var/run/munge && chown munge:munge /var/run/munge && \
+    touch /var/run/munge/munge.socket.2.lock && \
+    chown munge:munge /var/run/munge/munge.socket.2.lock
+
+# Run the entrypoint script
+CMD ["/bin/bash", "-c", "cp /tmp/slurmdbd.conf /etc/slurm/slurmdbd.conf && chmod 600 /etc/slurm/slurmdbd.conf && (socat UNIX-LISTEN:munge.socket.2,fork EXEC:/bin/cat || echo 'socat could not be started') & (/usr/sbin/slurmctld -D || echo 'slurmctld could not be started') & (/usr/sbin/slurmdbd -D || echo 'slurmdbd could not be started') & wait"]

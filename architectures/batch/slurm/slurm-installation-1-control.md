@@ -1,0 +1,279 @@
+# Slurm Installation Control Node
+
+#### 1.0 - configuring munge
+- creating munge key
+```bash
+$ sudo create-munge-key -r
+```
+
+- checking munge key
+```bash
+$ sudo file /etc/munge/munge.key
+```
+- starting munge process
+```bash
+$ sudo systemctl enable munge
+```
+```bash
+$ sudo systemctl start munge
+```
+```bash
+$ sudo systemctl status munge
+```
+
+#### 1.1 - configuring database
+- installing database
+```bash
+$ sudo dnf install mariadb-server mariadb-devel -y
+```
+```bash
+$ sudo dnf install python3-mysqlclient -y
+```
+```bash
+$ sudo systemctl enable mariadb
+```
+```bash
+$ sudo systemctl start mariadb
+```
+```bash
+$ sudo systemctl status mariadb
+```
+- ensuring to configure the MariaDB database’s root password (e.i. < password >)
+```bash
+$ sudo mysql_secure_installation
+```
+- configuring database
+```bash
+$ sudo mysql -p
+```
+```text
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 10
+Server version: 10.5.22-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> grant all on slurm_acct_db.* TO 'slurm'@'localhost' identified by 'password' with grant option;
+SHOW GRANTS;
+SHOW VARIABLES LIKE 'have_innodb';
+create database slurm_acct_db;
+quit;
+```
+#### 1.2 - configuring slurmdbd and slurmctld
+- installing packages
+```bash
+$ sudo dnf install slurm slurm-slurmctld slurm-slurmdbd -y
+```
+```bash
+$ sudo touch /var/log/slurm/slurmdbd.conf
+```
+```bash
+$ sudo chown slurm:slurm /var/log/slurm/slurmdbd.conf
+```
+
+- updating **/etc/slurm/slurmdbd.conf**
+```bash
+$ sudo cat /etc/slurm/slurmdbd.conf
+```
+```text
+# Authentication info
+AuthType=auth/munge
+#
+# slurmdbd info
+DebugLevel=4
+DbdAddr=control
+DbdHost=control
+DbdPort=6819
+LogFile=/var/log/slurm/slurmdbd.conf
+PidFile=/var/run/slurm/slurmdbd.pid
+#
+# DB Purge Settings
+PurgeEventAfter=1month
+PurgeJobAfter=1month
+PurgeResvAfter=1month
+PurgeStepAfter=1month
+PurgeSuspendAfter=1month
+PurgeTXNAfter=1month
+PurgeUsageAfter=1month
+#
+SlurmUser=slurm
+#
+# Database info
+StorageType=accounting_storage/mysql
+StorageHost=localhost
+StoragePass=password
+StorageUser=slurm
+StorageLoc=slurm_acct_db
+```
+
+- tunning mariadb, updating **/etc/my.cnf.d/innodb.cnf**
+```bash
+$ sudo cat /etc/my.cnf.d/innodb.cnf
+```
+```text
+[mysqld]
+innodb_buffer_pool_size=32768M
+innodb_log_file_size=64M
+innodb_lock_wait_timeout=900
+```
+
+```bash
+$ sudo systemctl stop mariadb
+```
+```bash
+$ sudo mv /var/lib/mysql/ib_logfile? /tmp/
+```
+```bash
+$ sudo sudo systemctl start mariadb
+```
+```bash
+$ sudo sudo systemctl status mariadb
+```
+
+- starting slurmdbd
+```bash
+$ sudo chown slurm /etc/slurm/slurmdbd.conf
+```
+```bash
+$ sudo chmod 600 /etc/slurm/slurmdbd.conf
+```
+```bash
+$ sudo systemctl enable slurmdbd
+```
+```bash
+$ sudo systemctl start slurmdbd
+```
+```bash
+$ sudo systemctl status slurmdbd
+```
+
+- starting slurmctl
+```bash
+$ sudo systemctl enable slurmctld
+```
+```bash
+$ sudo systemctl start slurmctld
+```
+```bash
+$ sudo systemctl status slurmctld
+```
+
+- check database
+```bash
+$ mysql -p -u slurm slurm_acct_db
+```
+
+```text
+Enter password:
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 8
+Server version: 10.5.22-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [slurm_acct_db]> show tables;
++-------------------------+
+| Tables_in_slurm_acct_db |
++-------------------------+
+| acct_coord_table        |
+| acct_table              |
+| clus_res_table          |
+| cluster_table           |
+| convert_version_table   |
+| federation_table        |
+| qos_table               |
+| res_table               |
+| table_defs_table        |
+| tres_table              |
+| txn_table               |
+| user_table              |
++-------------------------+
+12 rows in set (0.000 sec)
+
+MariaDB [slurm_acct_db]>
+```
+
+#### 1.3 - installing, configuring and starting slurmd (optional)
+- installing slurm
+```bash
+$ sudo dnf install slurm-slurmd -y
+```
+- configuring and starting slurm
+```bash
+$ sudo mkdir -p {/var/spool/slurmd,/var/log/slurm}
+```
+```bash
+$ sudo chown slurm:slurm /var/spool/slurmd /var/log/slurm
+```
+```bash
+$ sudo touch {/var/log/slurm/slurm_jobacct.log,/var/log/slurm/slurm_jobcomp.log}
+```
+```bash
+$ sudo chown -R slurm:slurm /var/log/slurm
+```
+```bash
+$ sudo chmod 0755 /var/log/slurm
+```
+ 
+- update **slurm.conf**, please visit this [site](https://slurm.schedmd.com/configurator.easy.html) for reference
+```bash
+$ sudo cat /etc/slurm/slurm.conf
+```
+```text
+# slurm.conf file generated by configurator easy.html.
+ClusterName=localcluster
+SlurmctldHost=control
+#
+ProctrackType=proctrack/cgroup
+ReturnToService=1
+SlurmctldPidFile=/var/run/slurmctld.pid
+SlurmctldPort=6817
+SlurmdPidFile=/var/run/slurmd.pid
+SlurmdPort=6818
+SlurmdSpoolDir=/var/spool/slurmd
+SlurmUser=slurm
+StateSaveLocation=/var/spool/slurmctld
+TaskPlugin=task/affinity,task/cgroup
+#
+#TIMERS
+KillWait=30
+MinJobAge=300
+SlurmctldTimeout=120
+SlurmdTimeout=300
+#
+# SCHEDULING
+SchedulerType=sched/backfill
+SelectType=select/cons_tres
+#
+# LOGGING AND ACCOUNTING
+AccountingStorageHost=localhost
+AccountingStorageType=accounting_storage/slurmdbd
+SlurmctldDebug=info
+SlurmctldLogFile=/var/log/slurmctld.log
+SlurmdDebug=info
+SlurmdLogFile=/var/log/slurmd.log
+#
+# COMPUTE NODES
+NodeName=control CPUs=1 State=UNKNOWN
+#NodeName=compute0 CPUs=1 State=UNKNOWN
+PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP
+```
+
+- starting slurmd
+```bash
+$ sudo systemctl enable slurmd
+```
+```bash
+$ sudo systemctl start slurmd
+```
+```bash
+$ sudo systemctl status slurmd
+```
+

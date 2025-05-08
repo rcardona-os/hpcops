@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slurmctl-munge
+  labels:
+    app: slurmctl-munge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: slurmctl-munge
+  template:
+    metadata:
+      labels:
+        app: slurmctl-munge
+    spec:
+      serviceAccountName: munge-sa
+      containers:
+        - name: slurmctl-munge-process
+          image: quay.io/rcardona/slurmctl-munge:latest
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+          volumeMounts:
+            - name: munge-key-volume
+              mountPath: /tmp/munge.key
+              subPath: munge.key
+            - name: slurmdbd-config-volume
+              mountPath: /tmp/slurmdbd.conf
+              subPath: slurmdbd.conf
+      volumes:
+        - name: munge-key-volume
+          secret:
+            secretName: munge-key-secret
+        - name: slurmdbd-config-volume
+          configMap:
+            name: slurmdbd-config

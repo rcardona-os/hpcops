@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: munge-process
+  labels:
+    app: munge-process
+spec:
+  serviceAccountName: munge-sa
+  containers:
+    - name: munge-process
+      image: quay.io/rcardona/munge-process:latest
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsUser: 1001
+        runAsNonRoot: true
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: munge-key-volume
+          mountPath: /tmp/munge.key
+          subPath: munge.key
+  volumes:
+    - name: munge-key-volume
+      secret:
+        secretName: munge-key-secret

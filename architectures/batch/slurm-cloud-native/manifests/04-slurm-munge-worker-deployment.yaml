@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: slurm-worker-headless
+  labels:
+    app: slurm-worker
+spec:
+  clusterIP: None  # Headless service
+  selector:
+    app: slurm-worker
+  ports:
+    - port: 6817  # Adjust based on Slurm configuration
+    - port: 22  # Adjust based on Slurm configuration
+      name: slurm
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: slurm-worker
+spec:
+  serviceName: slurm-worker-headless
+  replicas: 4  # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: slurm-worker
+  template:
+    metadata:
+      labels:
+        app: slurm-worker
+    spec:
+      serviceAccountName: munge-sa
+      containers:
+        - name: base-tools-process
+          image: quay.io/rcardona/base-tools:latest
+          ports:
+            - containerPort: 22
+              name: ssh
+          securityContext:
+            privileged: true
+            runAsUser: 0
+            allowPrivilegeEscalation: true
