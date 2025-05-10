@@ -17,15 +17,19 @@ if [ "$(id -u)" = "0" ]; then
     fi
 
     # Create munge key if it doesn't exist
+    echo "Starting... Create munge key if it doesn't exist "
     if [ ! -f /etc/munge/munge.key ]; then
         /usr/sbin/create-munge-key -r
     fi
+    echo "Finish... Create munge key if it doesn't exist "
 
     # Adjust ownership and permissions
+    echo "Starting... Adjust ownership and permissions"
     chown $MUNGEUSER:$MUNGEUSER /etc/munge/munge.key
     chmod 0644 /etc/munge/munge.key
     chown $MUNGEUSER:$MUNGEUSER /etc/munge
     chmod 0755 /etc/munge
+    echo "Finish... Adjust ownership and permissions"
 
     # Switch to non-root user
     exec su munge -s /bin/bash "$0" -- "$@"
