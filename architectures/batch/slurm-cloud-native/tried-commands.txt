@@ -79,3 +79,8 @@ please modify the current Dockerfile so it can create a simple container image w
 
 
 ---
+new 08-05-2025
+
+```bash
+$ podman build -f Dockerfile-munge-key-secret-generator -t quay.io/yourusername/munge-key-secret-generator:latest .
+```

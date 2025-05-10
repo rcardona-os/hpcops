@@ -14,7 +14,7 @@ spec:
       labels:
         app: slurmctl-munge
     spec:
-      serviceAccountName: munge-sa
+      serviceAccountName: slurm-sa
       containers:
         - name: slurmctl-munge-process
           image: quay.io/rcardona/slurmctl-munge:latest
