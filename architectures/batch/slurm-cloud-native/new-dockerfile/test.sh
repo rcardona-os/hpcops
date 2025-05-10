@@ -27,9 +27,9 @@ echo "Finished USER inside the container"
 
 # Create the munge key if it doesn't exist
 echo "4- Create the munge key if it doesn't exist"
-if [ ! -f /etc/munge/munge.key ]; then
-    /usr/sbin/create-munge-key -r
-fi
+#if [ ! -f /etc/munge/munge.key ]; then
+#    /usr/sbin/create-munge-key -r
+#fi
 echo "END 4-"
 
 # Adjust ownership and permissions
@@ -39,4 +39,6 @@ echo "END 4-"
 #chmod 0755 /etc/munge
 
 # Optionally, log completion
-echo "Munge key setup completed as root."
+#echo "Munge key setup completed as root."
+echo "Script completed. Sleeping to keep container alive..."
+sleep infinity
