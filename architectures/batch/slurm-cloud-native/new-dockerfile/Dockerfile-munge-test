@@ -1,8 +1,13 @@
 FROM registry.access.redhat.com/ubi9/ubi-minimal
 
 # Install required tools: munge and oc (client tools)
-RUN microdnf install -y munge munge-libs munge-devel && \
-    microdnf clean all
+RUN dnf install -y munge munge-libs munge-devel --enablerepo=codeready-builder-for-rhel-9-$(arch)-rpms && \
+    dnf clean all && \
+    # Download and install the OpenShift client
+    curl -LO "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz" && \
+    tar -xvzf openshift-client-linux.tar.gz && \
+    mv oc /usr/local/bin/oc && chmod +x /usr/local/bin/oc && \
+    rm -f openshift-client-linux.tar.gz kubectl
 
 # Patch create-munge-key to write to /mnt/munge/munge.key
 RUN sed -i 's|^KEYFILE=.*|KEYFILE="/mnt/munge/munge.key"|' /usr/sbin/create-munge-key
