@@ -11,4 +11,4 @@ oc create secret generic "$SECRET_NAME" \
   --from-file=munge.key=/mnt/munge/munge.key \
   -n "$SECRET_NAMESPACE" --dry-run=client -o yaml | oc apply -f -
 
-echo ">> Secret created successfully."
+echo ">> Secret created success."
