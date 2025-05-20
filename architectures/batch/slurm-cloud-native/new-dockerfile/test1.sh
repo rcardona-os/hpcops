@@ -28,4 +28,5 @@ echo "Finished USER inside the container"
 # Optionally, log completion
 #echo "Munge key setup completed as root."
 echo "Script completed. Sleeping to keep container alive..."
+echo "Script completed. Sleeping to keep container alive..." >> /tmp/test1.txt
 sleep infinity
