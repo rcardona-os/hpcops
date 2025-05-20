@@ -1,0 +1,18 @@
+FROM registry.access.redhat.com/ubi9/ubi-minimal
+
+# Install required tools: munge and oc (client tools)
+RUN microdnf install -y munge munge-libs munge-devel && \
+    microdnf clean all
+
+# Patch create-munge-key to write to /mnt/munge/munge.key
+RUN sed -i 's|^KEYFILE=.*|KEYFILE="/mnt/munge/munge.key"|' /usr/sbin/create-munge-key
+
+# Add the entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Set working directory
+WORKDIR /mnt/munge
+
+# Set entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
