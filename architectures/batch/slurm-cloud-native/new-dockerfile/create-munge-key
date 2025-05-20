@@ -49,8 +49,8 @@ if [ ! -e $randomfile ] ; then
 fi
 
 #Checking if the user want to overwrite existing key file
-if [ "$force" != "yes" ] && [ -e /etc/munge/munge.key ] ; then
-  echo The munge key /etc/munge/munge.key already exists
+if [ "$force" != "yes" ] && [ -e /mnt/munge/munge.key ] ; then
+  echo The munge key /mnt/munge/munge.key already exists
   echo -n "Do you want to overwrite it? (y/N) "
   read ans
   if [ "$ans" != "y" -a "$ans" != "Y" ] ; then
