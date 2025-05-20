@@ -15,19 +15,23 @@ spec:
         app: slurmctl-munge
     spec:
       serviceAccountName: slurm-sa
+      securityContext:
+        runAsUser: 1001            # UID for 'munge'
+        runAsGroup: 0              # GID 'root' for group ownership
+        fsGroup: 0                 # Ensures mounted secret is readable by GID 0
+        allowPrivilegeEscalation: false
       containers:
         - name: slurmctl-munge-process
-          image: quay.io/rcardona/slurmctl-munge:latest
-          securityContext:
-            runAsUser: 0
-            allowPrivilegeEscalation: true
+          image: quay.io/rcardona/slurmctl-munge:test
           volumeMounts:
             - name: munge-key-volume
-              mountPath: /tmp/munge.key
+              mountPath: /etc/munge/munge.key
               subPath: munge.key
+              readOnly: true
             - name: slurmdbd-config-volume
-              mountPath: /tmp/slurmdbd.conf
+              mountPath: /etc/slurm/slurmdbd.conf
               subPath: slurmdbd.conf
+              readOnly: true
       volumes:
         - name: munge-key-volume
           secret:
