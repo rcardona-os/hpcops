@@ -11,4 +11,3 @@ oc adm policy add-scc-to-user slurm-scc -z slurm-sa
 ```bash
 $ oc apply -f manifests/
 ```
-
