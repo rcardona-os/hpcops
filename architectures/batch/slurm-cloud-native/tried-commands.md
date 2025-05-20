@@ -34,12 +34,12 @@ $ podman run -dt --pod mypod --name mycontainer rhel9-slurm-munge
 $ podman run -it munge-key-and-secret-generator
 ```
 
-#### create a container 
+#### create a container
+```bash
 podman run -it munge-process
 
-
 podman run -dt --pod mypod munge-process
-
+```
 
 
 install ps command
@@ -96,6 +96,9 @@ please modify the current Dockerfile so it can create a simple container image w
 ---
 new 08-05-2025
 
+#### build image
+
 ```bash
-$ podman build -f Dockerfile-munge-key-secret-generator -t quay.io/yourusername/munge-key-secret-generator:latest .
+$ podman build -f Dockerfile-munge-key-secret-generator \
+  -t quay.io/rcardona/munge-key-secret-generator:test .
 ```
