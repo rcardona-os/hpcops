@@ -67,7 +67,7 @@ fi
 echo -n "Generating a pseudo-random key using $randomfile "
 dd if=$randomfile bs=1 count=1024 > /mnt/munge/munge.key \
   2>/dev/null
-chown root:root /etc/munge/munge.key
-chmod 0440 /etc/munge/munge.key
+chown root:root /mnt/munge/munge.key
+chmod 0440 /mnt/munge/munge.key
 echo completed.
 exit 0
