@@ -10,8 +10,9 @@ RUN dnf install -y munge munge-libs munge-devel --enablerepo=codeready-builder-f
     mv oc /usr/local/bin/oc && chmod +x /usr/local/bin/oc && \
     rm -f openshift-client-linux.tar.gz kubectl
 
-# Patch create-munge-key to write to /mnt/munge/munge.key
-RUN sed -i 's|^KEYFILE=.*|KEYFILE="/mnt/munge/munge.key"|' /usr/sbin/create-munge-key
+# copy create-munge-key to write to container image
+COPY create-munge-key /usr/sbin/create-munge-key
+RUN chmod +x /usr/sbin/create-munge-key
 
 # Add the entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
