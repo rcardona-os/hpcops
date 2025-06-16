@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Script: knamespace.sh
+# Usage:
+#   ./knamespace.sh -g            # Get current namespace
+#   ./knamespace.sh -s <ns>       # Set current namespace
+
+function get_namespace() {
+  ns=$(kubectl config view --minify --output 'jsonpath={..namespace}')
+  if [ -z "$ns" ]; then
+    echo "default"
+  else
+    echo "$ns"
+  fi
+}
+
+function set_namespace() {
+  if [ -z "$1" ]; then
+    echo "Error: Namespace not specified."
+    exit 1
+  fi
+  kubectl config set-context --current --namespace="$1"
+}
+
+if [[ $# -eq 0 ]]; then
+  echo "Usage: $0 [-g|--get] | [-s|--set <namespace>]"
+  exit 1
+fi
+
+case "$1" in
+  -g|--get)
+    get_namespace
+    ;;
+  -s|--set)
+    set_namespace "$2"
+    ;;
+  *)
+    echo "Unknown option: $1"
+    echo "Usage: $0 [-g|--get] | [-s|--set <namespace>]"
+    exit 1
+    ;;
+esac

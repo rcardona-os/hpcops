@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slurmctl-munge
+  labels:
+    app: slurmctl-munge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: slurmctl-munge
+  template:
+    metadata:
+      labels:
+        app: slurmctl-munge
+    spec:
+      serviceAccountName: slurm-sa
+      securityContext:
+        runAsUser: 1001            # UID for 'munge'
+        runAsGroup: 0              # GID 'root' for group ownership
+        fsGroup: 0                 # Ensures mounted secret is readable by GID 0
+      containers:
+        - name: slurmctl-munge-process
+          image: quay.io/rcardona/slurmctl-munge:test
+          volumeMounts:
+            - name: munge-key-volume
+              mountPath: /etc/munge/munge.key
+              subPath: munge.key
+              readOnly: true
+            - name: slurmdbd-config-volume
+              mountPath: /etc/slurm/slurmdbd.conf
+              subPath: slurmdbd.conf
+              readOnly: true
+      volumes:
+        - name: munge-key-volume
+          secret:
+            secretName: munge-key-secret
+        - name: slurmdbd-config-volume
+          configMap:
+            name: slurmdbd-config
